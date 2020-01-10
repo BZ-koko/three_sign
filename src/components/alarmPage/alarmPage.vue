@@ -7,6 +7,8 @@
       <el-button id="sphere" class="bottom-btn" style="display: none">球体</el-button>
       <el-button id="helix" class="bottom-btn" style="display: none">螺旋</el-button>
       <el-button id="grid" class="bottom-btn" style="display: none">网格</el-button>
+
+      <el-button @click="openSignLeft">未签到统计</el-button>
       <el-button class="bottom-btn" @click="animationClick">{{animationStatus? '暂停' :'启动'}}</el-button>
       <!--<el-button @click="changeTable2" class="bottom-btn">签到模拟</el-button>-->
       <div class="lucky-start-view">
@@ -40,13 +42,37 @@
     </div>
 
     <div class="sign-stat-view">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
+      <span style="padding-left:20px" v-for="item in departmentList">{{item.department}}:{{item.actCount}}/{{item.signCount}}</span>
     </div>
+
+    <el-drawer
+      title="未签到人员统计"
+      :visible.sync="signDialog"
+      direction="ltr"
+      :show-close="false"
+      :modal="false"
+      size="22%"
+      style="overflow-y: auto">
+      <el-table
+        :border="true"
+        :data="gridData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
+        style="width: 90%;margin-left: 5%;">
+        <el-table-column property="department" label="部门"></el-table-column>
+        <el-table-column property="username" label="姓名"></el-table-column>
+      </el-table>
+      <div class="pagination-view">
+        <el-pagination
+          small
+          :page-size="pageSize"
+          :current-page="currentPage"
+          @current-change="handleCurrentChange"
+          layout="prev, pager, next"
+          :total="gridData.length"
+        >
+        </el-pagination>
+      </div>
+    </el-drawer>
+
   </div>
 </template>
 
@@ -93,6 +119,13 @@
         musicImgUrl: open_music,
 
         userName: '余秋雨',
+
+        departmentList: [],//签到部门
+
+        signDialog: false,//签到统计抽屉状态
+        currentPage: 1, //当前页
+        pageSize: 10,
+        gridData: [],
       }
     },
     beforeDestroy() {
@@ -102,7 +135,7 @@
       this.init();
       this.animate();
       // this.getAllData()
-      // this.openMusic();
+      this.openMusic();
       this.connectWebsocket();
       for (let i = 0; i < this.table2.length; i++) {
         this.strandArr.push(i);
@@ -124,6 +157,18 @@
           this.musicImgUrl = open_music
         }
       },
+      //打开签到统计
+      openSignLeft() {
+        this.signDialog = true;
+        commonApi.getNoShowInfo().then(res => {
+          this.gridData = res.data;
+        }).catch(err => {
+          console.log(err);
+        })
+      },
+      handleCurrentChange(val) {
+        this.currentPage = val;
+      },
       getAllData() {
         commonApi.getMember().then(res => {
           console.log(res);
@@ -134,7 +179,7 @@
       connectWebsocket() {
         // WebSocketx
         if ('WebSocket' in window) {
-          this.websocket = new WebSocket('ws://10.1.0.190:7200/websocket/' + this.userName);
+          this.websocket = new WebSocket('ws://106.14.178.171:7200/websocket/' + this.userName);
           this.initWebSocket()
         } else {
           alert('当前浏览器不支持websocket')
@@ -164,8 +209,9 @@
       },
       setOnmessageMessage(event) {
         console.log('服务端返回：' + event.data);
-        this.signList.push(JSON.parse(event.data));
-        this.changeTable2(JSON.parse(event.data));
+        this.departmentList = JSON.parse(event.data).allCountVos;
+        this.signList.push(JSON.parse(event.data).resultVo);
+        this.changeTable2(JSON.parse(event.data).resultVo);
       },
       setOncloseMessage() {
         console.log('WebSocket连接关闭    状态码：' + this.websocket.readyState);
@@ -293,9 +339,9 @@
       },
       init() {
         camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
-        camera.position.x = 3000;
+        camera.position.x = 3300;
         scene = new THREE.Scene();
-        scene.translateZ(200);
+        // scene.translateZ(200);
 
         //表格
         for (var i = 0; i < this.table2.length; i++) {
@@ -368,7 +414,7 @@
         }
         //实例
         renderer = new CSS3DRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight - 100);
+        renderer.setSize(window.innerWidth, window.innerHeight - 50);
         document.getElementById('container').appendChild(renderer.domElement);
         //
         this.controls = new TrackballControls(camera, renderer.domElement);
@@ -545,7 +591,7 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 150px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -569,6 +615,17 @@
     bottom: 0;
     width: 100%;
     height: 40px;
+    line-height: 40px;
+    text-align: center;
+    /*border: solid 1px red;*/
+    color: #606266;
+    font-size: 14px;
+  }
+
+  .pagination-view {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
   }
 
   #menu {
@@ -625,7 +682,7 @@
   button {
     color: rgba(127, 255, 255, 0.75);
     background: transparent;
-    outline: 1px solid rgba(127, 255, 255, 0.75);
+    /*outline: 1px solid rgba(127, 255, 255, 0.75);*/
     border: 0px;
     padding: 5px 10px;
     cursor: pointer;
