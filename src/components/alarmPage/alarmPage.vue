@@ -8,8 +8,8 @@
       <el-button id="helix" class="bottom-btn" style="display: none">螺旋</el-button>
       <el-button id="grid" class="bottom-btn" style="display: none">网格</el-button>
 
-      <el-button @click="openSignLeft">未签到统计</el-button>
-      <el-button class="bottom-btn" @click="animationClick">{{animationStatus? '暂停' :'启动'}}</el-button>
+      <el-button @click="openSignLeft">签到列表</el-button>
+      <el-button class="bottom-btn" @click="animationClick">{{animationStatus? '动效暂停' :'动效开启'}}</el-button>
       <!--<el-button @click="changeTable2" class="bottom-btn">签到模拟</el-button>-->
       <div class="lucky-start-view">
         <!--抽奖人数：-->
@@ -20,9 +20,10 @@
       <el-button v-if="!luckyBtnStatus" @click="endLucky" class="bottom-btn">停</el-button>
 
       <audio controls autoplay loop muted="muted" id="vd" style="display: none">
-        <source src="../../assets/mp3/no_love.mp3" type="audio/mpeg">
-        <source src="../../assets/mp3/no_love.mp3" type="audio/ogg">
-        <!--<embed height="50" width="100" src="../../assets/mp3/no_love.mp3">-->
+        <!--<source src="../../assets/mp3/no_love.mp3" type="audio/mpeg">-->
+        <!--<source src="../../assets/mp3/no_love.mp3" type="audio/ogg">-->
+        <source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/mpeg">
+        <source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/ogg">
       </audio>
     </div>
     <div class="lucky-view" v-if="popoverVisible">
@@ -32,7 +33,9 @@
       </div>
       <div v-for="item in luckyArr">
         <div class="lucky-item">
-          <img class="lucky-item-avatar" :src="item.logoUrl" alt="">
+          <img class="lucky-item-avatar" v-if="item.logoUrl" :src="item.logoUrl" alt="">
+          <img class="lucky-item-avatar" v-else
+               src="http://oss.zt889.cn/on/package/9cb2adba93a34baaa15080bf61e75715.png" alt="">
           <div class="lucky-item-info">
             <span style="padding-bottom: 3px;">{{item.username}}</span>
             <span>{{item.departmentName}}</span>
@@ -40,39 +43,104 @@
         </div>
       </div>
     </div>
-
-    <div class="sign-stat-view">
-      <span style="padding-left:20px" v-for="item in departmentList">{{item.department}}:{{item.actCount}}/{{item.signCount}}</span>
-    </div>
-
     <el-drawer
-      title="未签到人员统计"
       :visible.sync="signDialog"
       direction="ltr"
       :show-close="false"
       :modal="false"
       size="22%"
-      style="overflow-y: auto">
-      <el-table
-        :border="true"
-        :data="gridData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
-        style="width: 90%;margin-left: 5%;">
-        <el-table-column property="department" label="部门"></el-table-column>
-        <el-table-column property="username" label="姓名"></el-table-column>
-      </el-table>
-      <div class="pagination-view">
-        <el-pagination
-          small
-          :page-size="pageSize"
-          :current-page="currentPage"
-          @current-change="handleCurrentChange"
-          layout="prev, pager, next"
-          :total="gridData.length"
-        >
-        </el-pagination>
+      style="overflow-y: auto;">
+      <div>
+        <div class="no-sign-btn">
+          <el-button size="mini" @click="openAddNoSign">未到人员统计</el-button>
+        </div>
+        <el-table
+          @row-click="getdepDetail"
+          :data="gridData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
+          style="width: 90%;margin-left: 5%;">
+          <el-table-column
+            align="center"
+            prop="department"
+            label="部门"
+            width="130"
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column align="center" label="实到/应到" show-overflow-tooltip>
+            <template slot-scope="scope">
+              <span>{{scope.row.actCount}}/{{scope.row.signCount}}</span>
+            </template>
+          </el-table-column>
+          <el-table-column align="center" width="40">
+            <template slot-scope="scope">
+              <div><i class="el-icon-arrow-right"></i></div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="pagination-view">
+          <el-pagination
+            small
+            :page-size="pageSize"
+            :current-page="currentPage"
+            @current-change="handleCurrentChange"
+            layout="prev, pager, next"
+            :total="gridData.length"
+          >
+          </el-pagination>
+        </div>
+        <div class="no-sign-view" v-if="innerDrawer">
+          <div class="no-sign-content">
+            <span style="color: #909399;font-weight: bold;font-size: 14px;padding: 3px 0  15px 0;">未到人员</span>
+            <span v-for="item in noSignDepartmentList" style="padding: 5px;font-size: 14px;color: #606266;">{{item.username}}</span>
+          </div>
+          <div class="hide-sign-content">
+            <i class="el-icon-arrow-left"
+               @click="innerDrawer = false"
+               style="font-size: 25px;cursor: pointer"></i>
+          </div>
+        </div>
+
+
+        <el-drawer
+          :visible.sync="noSignDrawer"
+          direction="ltr"
+          :show-close="false"
+          :modal="false"
+          size="22%"
+          style="overflow-y: auto;">
+          <el-table
+            @row-click="getdepDetail"
+            :data="noSignData.slice((currentPage-1)*pageSize,currentPage*pageSize)"
+            style="width: 90%;margin-left: 5%;">
+            <el-table-column
+              align="center"
+              prop="department"
+              label="部门"
+              width="130"
+              show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column
+              align="center"
+              prop="username"
+              label="姓名"
+              width="130"
+              show-overflow-tooltip>
+            </el-table-column>
+          </el-table>
+          <div class="pagination-view">
+            <el-pagination
+              small
+              :page-size="pageSize"
+              :current-page="currentPage"
+              @current-change="handleCurrentChange"
+              layout="prev, pager, next"
+              :total="gridData.length"
+            >
+            </el-pagination>
+          </div>
+        </el-drawer>
+
       </div>
     </el-drawer>
-
   </div>
 </template>
 
@@ -84,7 +152,9 @@
   // import OrbitControls from '../../js/OrbitControls.js';
   import {CSS3DRenderer, CSS3DObject} from '../../js/CSS3DRenderer.js';
   import commonApi from '../../api/commonApi';
-  import {table} from '../../mockData/tableData'
+  import commonJS from '../../utils/common';
+  // import {table} from '../../mockData/tableData'
+  import {table} from '../../mockData/tableData2'
   import open_music from '../../assets/open_music.png';
   import close_music from '../../assets/close_music.png';
 
@@ -122,24 +192,40 @@
 
         departmentList: [],//签到部门
 
+        noSignDepartmentList: [],//部门未签到人员
+
         signDialog: false,//签到统计抽屉状态
+        innerDrawer: false,//签到统计内层抽屉状态
+        noSignDrawer: false,//总未签到
         currentPage: 1, //当前页
         pageSize: 10,
-        gridData: [],
+        gridData: [],//部门统计
+        noSignData: [],//总人员统计
+
+        isShowSignModal: true,//签到卡 状态
+
+        randomNArr: [],
+
+        audioSrc:'',//音频文件地址
       }
     },
     beforeDestroy() {
       this.onbeforeunload()
     },
     mounted() {
+      // var msg = new SpeechSynthesisUtterance("欢迎 余秋雨1");
+      // console.log(msg);
+      // window.speechSynthesis.speak(msg);
       this.init();
       this.animate();
-      // this.getAllData()
-      this.openMusic();
+      // this.openMusic();
       this.connectWebsocket();
+      commonJS.hire();
+      this.getRecord();
       for (let i = 0; i < this.table2.length; i++) {
         this.strandArr.push(i);
         this.RTinArr.push(i);
+        this.randomNArr.push(i);
       }
       setInterval(() => this.transform(targets.table, 2000), 10000);
       setInterval(() => this.transform(targets.helix, 2000), 20000);
@@ -147,6 +233,31 @@
       setInterval(() => this.transform(targets.sphere, 2000), 40000);
     },
     methods: {
+      getRecord() {//获取已签到人员信息
+        commonApi.getShowInfo().then(res => {
+          this.departmentList = res.data.allCountVos;
+          this.signList = res.data.lxjUsers;
+          this.isShowSignModal = false;
+          this.signList.forEach(item => {
+            this.changeTable2(item);
+          });
+        }).catch(err => {
+          console.log(err);
+        })
+      },
+      //获取部门未签到人员
+      getdepDetail(item) {
+        this.innerDrawer = true;
+        commonApi.getNoShowDepartmentInfo({params: {department: item.department}}).then(res => {
+          this.noSignDepartmentList = res.data;
+        })
+      },
+      openAddNoSign() {
+        this.noSignDrawer = true;
+        commonApi.getNoShowInfo().then(res => {
+          this.noSignData = res.data;
+        })
+      },
       openMusic() {
         var music = document.getElementById("vd");//获取ID  
         if (music.paused) { //判读是否播放
@@ -159,8 +270,11 @@
       },
       //打开签到统计
       openSignLeft() {
+        var msg = new SpeechSynthesisUtterance("欢迎 余秋雨 参加晨会");
+        console.log(msg);
+        window.speechSynthesis.speak(msg);
         this.signDialog = true;
-        commonApi.getNoShowInfo().then(res => {
+        commonApi.getCountInfo().then(res => {
           this.gridData = res.data;
         }).catch(err => {
           console.log(err);
@@ -168,13 +282,6 @@
       },
       handleCurrentChange(val) {
         this.currentPage = val;
-      },
-      getAllData() {
-        commonApi.getMember().then(res => {
-          console.log(res);
-        }).catch(err => {
-          console.log(err, 'err');
-        })
       },
       connectWebsocket() {
         // WebSocketx
@@ -208,10 +315,11 @@
         console.log('WebSocket连接成功    状态码：' + this.websocket.readyState)
       },
       setOnmessageMessage(event) {
-        console.log('服务端返回：' + event.data);
+        this.isShowSignModal = true;
         this.departmentList = JSON.parse(event.data).allCountVos;
         this.signList.push(JSON.parse(event.data).resultVo);
         this.changeTable2(JSON.parse(event.data).resultVo);
+        this.audioSrc = 'http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3';
       },
       setOncloseMessage() {
         console.log('WebSocket连接关闭    状态码：' + this.websocket.readyState);
@@ -229,21 +337,23 @@
       },
       //模拟签到
       changeTable2(data) {
-        this.$notify({
-          // title: '标题名称',
-          message: `<div style="display: flex;justify-content: center;align-items: center">
-                      <img style="width: 60px;height: 60px;border-radius: 50%" src="${data.logoUrl}" alt="">
+        if (this.isShowSignModal) {
+          this.$notify({
+            // title: '标题名称',
+            message: `<div style="display: flex;justify-content: center;align-items: center">
+                      <img style="width: 60px;height: 60px;border-radius: 50%" src="${data.logoUrl != '' ? data.logoUrl : 'http://oss.zt889.cn/on/package/9cb2adba93a34baaa15080bf61e75715.png'}" alt="">
                     <div style="font-size: 15px">
                       <span style="padding: 0 0 15px 10px;">${data.username}</span><br/>
                       <span style="padding: 0 0 5px 10px;">${data.departmentName}</span>
                     </div>
                     </div>`,
-          showClose: false,
-          duration: 2500,
-          dangerouslyUseHTMLString: true
-        });
+            showClose: false,
+            duration: 3000,
+            dangerouslyUseHTMLString: true
+          });
+        }
         let curEvent = scene.children[this.randomNum()].element;
-        curEvent.getElementsByClassName("image-info")[0].src = data.logoUrl;
+        curEvent.getElementsByClassName("image-info")[0].src = data.logoUrl != '' ? data.logoUrl : 'http://oss.zt889.cn/on/package/9cb2adba93a34baaa15080bf61e75715.png';
         curEvent.getElementsByClassName("details")[0].innerHTML = data.username;
         curEvent.getElementsByClassName("partment")[0].innerHTML = data.departmentName;
       },
@@ -285,7 +395,7 @@
         // scene.rotation.z = 0;
         scene.rotation.y = this.theta;
         this.strandArr.forEach(item => {
-          scene.children[item].element.style.backgroundColor = "rgba(5, 39, 175, 0.463)"
+          scene.children[item].element.style.backgroundColor = 'rgba(119, 196, 161,' + (Math.random() * 0.5 + 0.15) + ')';
         });
         this.randomArr = [];
         cancelAnimationFrame(this.luckyAnm);
@@ -306,9 +416,6 @@
         for (let i = 0; i < this.table2.length; i++) {
           this.randomArr.push(i);
         }
-        // for (let i = 0; i < this.signList.length; i++) {
-        //   this.randomArr.push(i);
-        // }
         this.randomArr.sort(() => {
           return Math.random() - 0.5;
         });
@@ -323,13 +430,17 @@
         });
         randomNArr = JSON.parse(JSON.stringify(this.RTinArr));
         randomNArr.length = 1;
-        this.RTinArr.splice(randomNArr[0], 1);
+        this.RTinArr.forEach((item, index) => {
+          if (randomNArr[0] === item) {
+            this.RTinArr.splice(index, 1)
+          }
+        });
         return randomNArr[0];
       },
       //动画控制
       animationClick() {
         this.animationStatus = !this.animationStatus;
-        this.animationStatus ? this.thetaAdd = 0.001 : this.thetaAdd = 0
+        this.animationStatus ? this.thetaAdd = 0.004 : this.thetaAdd = 0
       },
       handleChange(v) {
         this.luckyNum = v;
@@ -339,22 +450,24 @@
       },
       init() {
         camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
-        camera.position.x = 3300;
+        camera.position.x = 3600;
         scene = new THREE.Scene();
-        // scene.translateZ(200);
+        // scene.translateX(200);
 
         //表格
         for (var i = 0; i < this.table2.length; i++) {
           var element = document.createElement('div');
           element.className = 'element';
-          element.style.backgroundColor = 'rgba(5, 39, 175,' + (Math.random() * 0.5 + 0.25) + ')';
+          element.style.backgroundColor = 'rgba(119, 196, 161,' + (Math.random() * 0.5 + 0.15) + ')';
+          // element.style.backgroundColor = 'rgba(119, 196, 161,0.3)';
           var number = document.createElement('div');
           number.className = 'number';
           number.textContent = i + 1;
           var image = document.createElement('img');
           image.className = 'image-info';
           image.style.width = '80px';
-          image.style.height = '100px';
+          image.style.height = '65px';
+          image.style.paddingTop = '20px';
           image.src = this.table2[i].avatar;
           element.appendChild(image);
           var details = document.createElement('div');
@@ -375,7 +488,7 @@
           objects.push(object);
           //
           var object = new THREE.Object3D();
-          object.position.x = (this.table2[i].positionX) * 140 - 1330;
+          object.position.x = (this.table2[i].positionX) * 140 - 2330; //模型平移
           object.position.y = -(this.table2[i].positionY) * 180 + 990;
           targets.table.push(object);
         }
@@ -414,7 +527,7 @@
         }
         //实例
         renderer = new CSS3DRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight - 50);
+        renderer.setSize(window.innerWidth, window.innerHeight - 100);
         document.getElementById('container').appendChild(renderer.domElement);
         //
         this.controls = new TrackballControls(camera, renderer.domElement);
@@ -493,7 +606,7 @@
               scene.children[item].element.style.backgroundColor = 'red';
             });
             strArr.forEach(item => {
-              scene.children[item].element.style.backgroundColor = 'rgba(5, 39, 175, 0.463)';
+              scene.children[item].element.style.backgroundColor = 'rgba(119, 196, 161, 0.463)';
             })
           }
           requestAnimationFrame(this.luckyAnm);
@@ -510,11 +623,15 @@
 </script>
 
 <style>
+  .el-table td, .el-table th {
+    padding: 8px 0;
+  }
+
   .detail-container {
     background-color: #000;
     width: 100vw;
     height: 100vh;
-    background: url('../../assets/timg.jpg') no-repeat 100% 100%;
+    background: url('../../assets/default_bg.jpg') no-repeat 100% 100%;
     background-size: cover;
 
   }
@@ -569,6 +686,43 @@
     /*padding: 0 10px;*/
   }
 
+  .no-sign-view {
+    background-color: white;
+    position: fixed;
+    left: 22%;
+    top: 0;
+    width: 150px;
+    height: 100%;
+    border-left: solid 1px #C0C4CC;
+    display: flex;
+  }
+
+  .no-sign-content {
+    margin-top: 80px;
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 70%;
+  }
+
+  .no-sign-btn {
+    color: #606266;
+    padding: 0 0 15px 15px;
+  }
+
+  .el-drawer__header {
+    padding: 0;
+  }
+
+  .hide-sign-content {
+    height: 100%;
+    width: 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .close-lucky {
     cursor: pointer;
     font-size: 14px;
@@ -591,7 +745,7 @@
     position: fixed;
     bottom: 0;
     width: 100%;
-    height: 120px;
+    height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -613,12 +767,12 @@
   .sign-stat-view {
     position: fixed;
     bottom: 0;
+    padding-top: 15px;
     width: 100%;
-    height: 40px;
-    line-height: 40px;
+    height: 60px;
     text-align: center;
     /*border: solid 1px red;*/
-    color: #606266;
+    color: #fff;
     font-size: 14px;
   }
 

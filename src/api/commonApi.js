@@ -2,20 +2,23 @@
 import request from '../utils/http'
 
 const api = {
-  signRecord: '/sign/getSignRecord',//列表
-  getMember: '/callback/getMember',//列表
-  // getNoShowInfo: '/callback/getNoShowInfo',//未签到列表
+  getCountInfo: '/callback/getCountInfo',//统计应到未到
   getNoShowInfo: '/callback/getMember',//未签到列表
+  getShowInfo: '/callback/getShowInfo',//已签到人员记录
+  getNoShowDepartmentInfo: '/callback/getNoShowDepartmentInfo',//点击部门统计该部门未到人员信息
 };
 
 export default {
+  getShowInfo() {
+    return request.get(api.getShowInfo)
+  },
   getNoShowInfo() {
     return request.get(api.getNoShowInfo)
   },
-  signRecord(params) {
-    return request.get(api.signRecord, params)
+  getCountInfo() {
+    return request.get(api.getCountInfo)
   },
-  getMember() {
-    return request.get(api.getMember)
+  getNoShowDepartmentInfo(params) {
+    return request.get(api.getNoShowDepartmentInfo, params)
   },
 }

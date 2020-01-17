@@ -2,7 +2,8 @@ import axios from 'axios'
 import {MessageBox, Message} from 'element-ui'
 
 let instance = axios.create({
-  baseURL: 'http://10.1.0.190:7200/',
+  baseURL: 'http://106.14.178.171:7200/',
+  // baseURL: 'http://10.1.0.190:7200/',
   timeout: 60000,
   withCredentials: true, // send cookies when cross-domain requests
   headers: {
@@ -14,26 +15,20 @@ let instance = axios.create({
 
 // 添加请求拦截器
 instance.interceptors.request.use(config => {
-  // 在发送请求之前做些什么
-  console.log(config);
   return config;
 }, error => {
-  // 对请求错误做些什么
   return Promise.reject(error);
 });
 
 // 添加响应拦截器
 instance.interceptors.response.use(response => {
-  // 对响应数据做点什么
-  console.log(response, 'response');
   return response;
 }, error => {
-  Message({
-    message: error.message,
-    type: 'error',
-    duration: 5 * 1000
-  });
-  // 对响应错误做点什么
+  // Message({
+  //   message: error.message,
+  //   type: 'error',
+  //   duration: 5 * 1000
+  // });
   return Promise.reject(error);
 });
 
