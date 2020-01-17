@@ -1,5 +1,5 @@
 # 基于钉钉扫脸的签到抽奖项目
-vue+three+websocket，结合钉钉扫脸实时签到，抽奖项目
+基于three元素周期表example，vue+three+websocket，结合钉钉扫脸实时签到，抽奖项目
 
 [在线demo](http://lxjdev.lxjchina.com.cn/sign/#/)
 
