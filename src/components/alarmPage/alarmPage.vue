@@ -1,7 +1,7 @@
 <template>
   <div class="detail-container">
     <div id="container"></div>
-    <img class="music-view" :src="musicImgUrl" alt="" @click="openMusic">
+    <!--<img class="music-view" :src="musicImgUrl" alt="" @click="openMusic">-->
     <div class="bottom-settings">
       <el-button id="table" class="bottom-btn" style="display: none">表格</el-button>
       <el-button id="sphere" class="bottom-btn" style="display: none">球体</el-button>
@@ -19,12 +19,12 @@
       <el-button v-if="luckyBtnStatus" @click="startLucky" class="bottom-btn">开始选人</el-button>
       <el-button v-if="!luckyBtnStatus" @click="endLucky" class="bottom-btn">停</el-button>
 
-      <audio controls autoplay loop muted="muted" id="vd" style="display: none">
-        <!--<source src="../../assets/mp3/no_love.mp3" type="audio/mpeg">-->
-        <!--<source src="../../assets/mp3/no_love.mp3" type="audio/ogg">-->
-        <source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/mpeg">
-        <source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/ogg">
-      </audio>
+      <!--<audio controls autoplay loop muted="muted" id="vd" style="display: none">-->
+        <!--&lt;!&ndash;<source src="../../assets/mp3/no_love.mp3" type="audio/mpeg">&ndash;&gt;-->
+        <!--&lt;!&ndash;<source src="../../assets/mp3/no_love.mp3" type="audio/ogg">&ndash;&gt;-->
+        <!--<source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/mpeg">-->
+        <!--<source src="http://lxjdev.devchina.com.cn/afanfan/server/lxj/video.mp3" type="audio/ogg">-->
+      <!--</audio>-->
     </div>
     <div class="lucky-view" v-if="popoverVisible">
       <div class="lucky-header">
@@ -270,7 +270,7 @@
       },
       //打开签到统计
       openSignLeft() {
-        var msg = new SpeechSynthesisUtterance("欢迎 余秋雨 参加晨会");
+        var msg = new SpeechSynthesisUtterance("欢迎 余秋雨 参加晨会");//语音播报 - 文字转语音
         console.log(msg);
         window.speechSynthesis.speak(msg);
         this.signDialog = true;
