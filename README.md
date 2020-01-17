@@ -23,4 +23,4 @@ npm run dev
 ![连接](./static/3.png)
 
 ### 统计
-![连接](./static/1.png)
+![连接](./static/4.png)
